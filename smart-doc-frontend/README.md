@@ -23,7 +23,6 @@ Components included:
 
 ## ⚙️ Setup & Installation
 
-1. Clone the repository:
    ```bash
    git clone https://github.com/malathi-1588/smart-doc-frontend.git
    cd smart-doc-frontend
