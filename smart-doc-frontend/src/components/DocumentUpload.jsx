@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline";
 
-export default function DocumentUpload() {
+export default function DocumentUpload({ onFileUploaded }) {
   const [file, setFile] = useState(null);
-  const [status, setStatus] = useState(""); // success or error message
+  const [status, setStatus] = useState("");
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
     setFile(selectedFile);
 
     const formData = new FormData();
@@ -21,6 +22,10 @@ export default function DocumentUpload() {
 
       if (res.ok) {
         setStatus(`✅ ${data.message}`);
+        // 🔑 Notify parent (App.jsx)
+        if (onFileUploaded) {
+          onFileUploaded(selectedFile.name);
+        }
       } else {
         setStatus(`❌ ${data.error || "Upload failed"}`);
       }
@@ -31,9 +36,7 @@ export default function DocumentUpload() {
 
   return (
     <div className="text-center">
-      <CloudArrowUpIcon
-        className="w-12 h-12 text-blue-500 mx-auto"
-      />
+      <CloudArrowUpIcon className="w-12 h-12 text-blue-500 mx-auto" />
       <h2 className="mt-4 text-lg font-semibold">Upload Document</h2>
       <p className="text-sm text-gray-500">Supports PDF, Word, and image files</p>
 

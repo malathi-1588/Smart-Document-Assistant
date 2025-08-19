@@ -1,7 +1,7 @@
 import { MagnifyingGlassIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 
-export default function DocumentFetch() {
+export default function DocumentFetch({ onSelectFile }) {
   const [docName, setDocName] = useState("");
   const [recentSearches, setRecentSearches] = useState([]);
   const [results, setResults] = useState([]);
@@ -16,7 +16,8 @@ export default function DocumentFetch() {
   }, []);
 
   // Handle search
-  const handleSearch = () => {
+  const handleSearch = (e) => {
+    e.preventDefault(); // stop page reload
     if (!docName.trim()) return;
 
     fetch(`http://localhost:5000/documents/${docName}`)
@@ -64,7 +65,14 @@ export default function DocumentFetch() {
           <h3 className="text-gray-700 font-semibold">Search Results</h3>
           <ul className="mt-2 space-y-1">
             {results.map((doc) => (
-              <li key={doc.id} className="text-blue-600 hover:underline cursor-pointer">
+              <li
+                key={doc.id}
+                className="text-blue-600 hover:underline cursor-pointer"
+                onClick={() => {
+                  setDocName(doc.filename);
+                  onSelectFile(doc.filename); // 🔥 update preview
+                }}
+              >
                 {doc.filename}
               </li>
             ))}
@@ -82,7 +90,10 @@ export default function DocumentFetch() {
             <li
               key={item.id}
               className="text-blue-600 cursor-pointer hover:underline"
-              onClick={() => setDocName(item.filename)}
+              onClick={() => {
+                setDocName(item.filename);
+                onSelectFile(item.filename); // 🔥 update preview
+              }}
             >
               {item.filename}
             </li>
