@@ -10,12 +10,12 @@ The project is built with **React + Vite** and styled using **Tailwind CSS**.
 ---
 
 ## Features
-**User Authentication:** Login and Signup functionality.
-**Document Upload:** Upload documents to the server.
-**Document Fetch:** Search and fetch documents by name.
-**Document Preview:** View document details and content.
-**Text Extraction:** Display extracted text from uploaded documents.
-**Responsive Design:** Works well on desktop and mobile devices.
+- **User Authentication:** Login and Signup functionality.
+- **Document Upload:** Upload documents to the server.
+- **Document Fetch:** Search and fetch documents by name.
+- **Document Preview:** View document details and content.
+- **Text Extraction:** Display extracted text from uploaded documents.
+- **Responsive Design:** Works well on desktop and mobile devices.
 
 ---
 
@@ -74,8 +74,8 @@ The app will run on http://localhost:5173
 ---
 
 ## Usage
-**Login/Signup:** Create an account or log in to access document features.
-**Upload Document:** Use the upload form to select and upload a document.
-**Fetch Document:** Search for documents by name.
-**Preview & Extracted Text:** View document details and extracted text in the preview section.
+- **Login/Signup:** Create an account or log in to access document features.
+- **Upload Document:** Use the upload form to select and upload a document.
+- **Fetch Document:** Search for documents by name.
+- **Preview & Extracted Text:** View document details and extracted text in the preview section.
 
