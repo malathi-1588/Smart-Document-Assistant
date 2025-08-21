@@ -53,7 +53,10 @@ smart-doc-frontend/
 Components included:
 - `DocumentUpload` → Upload PDF files  
 - `DocumentFetch` → Retrieve uploaded files  
-- `DocumentPreview` → Display file contents  
+- `DocumentPreview` → Display file contents
+- `DocumentText` → Display extracted text from file
+- `Login` → Login form
+- `Signup` → Sign Up form 
 
 ---
 
@@ -71,12 +74,8 @@ The app will run on http://localhost:5173
 ---
 
 ## Usage
-**Login/Signup:**
-Create an account or log in to access document features.
-**Upload Document:**
-Use the upload form to select and upload a document.
-**Fetch Document:**
-Search for documents by name.
-**Preview & Extracted Text:**
-View document details and extracted text in the preview section.
+**Login/Signup:** Create an account or log in to access document features.
+**Upload Document:** Use the upload form to select and upload a document.
+**Fetch Document:** Search for documents by name.
+**Preview & Extracted Text:** View document details and extracted text in the preview section.
 
