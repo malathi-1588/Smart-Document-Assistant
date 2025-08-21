@@ -62,8 +62,7 @@ def extract_with_ocr(file_path: str) -> str:
     """OCR fallback with Tesseract."""
     try:
         if file_path.lower().endswith((".jpg", ".jpeg", ".png")):
-            return pytesseract.image_to_string(Image.open(file_path))
-        # we REMOVE pdf2image.convert_from_path completely
+            return pytesseract.image_to_string(Image.open(file_path)) 
     except Exception as e:
         logger.error(f"OCR failed: {e}")
     return ""

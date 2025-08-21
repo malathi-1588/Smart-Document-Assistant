@@ -4,7 +4,11 @@ import mysql.connector
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-from text_extractor import extract_text
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from text_extractor import extract_text   # unchanged
 
 # ------------------ Setup ------------------
 app = Flask(__name__)
@@ -14,7 +18,21 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# ------------------ DB helper ------------------
+# JWT
+app.config["JWT_SECRET_KEY"] = "super-secret-key"   # 🔑 move to .env later
+bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
+# DB setup
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",  
+    database="smartdocdb"
+)
+cursor = db.cursor(dictionary=True)
+
+
 def get_db_connection():
     return mysql.connector.connect(
         host="localhost",
@@ -23,9 +41,47 @@ def get_db_connection():
         database="smartdocdb"
     )
 
-# ------------------ Routes ------------------
+# ------------------ Auth ------------------
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+            (username, generate_password_hash(password))
+        )
+        db.commit()
+        return jsonify({"message": "User created successfully"})
+    except mysql.connector.IntegrityError:
+        return jsonify({"error": "Username already exists"}), 400
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+    user = cursor.fetchone()
+
+    if user and check_password_hash(user["password_hash"], password):
+        # generate a simple token (for now username itself)
+        token = f"TOKEN-{user['id']}"
+        return jsonify({"token": token, "username": username})
+    return jsonify({"error": "Invalid credentials"}), 401
+
+# ------------------ Protected Routes ------------------
 @app.route("/upload", methods=["POST"])
+# @jwt_required()
 def upload_file():
+    user_id = None
     if "file" not in request.files:
         return jsonify({"error": "No file part"}), 400
 
@@ -37,61 +93,21 @@ def upload_file():
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "INSERT INTO documents (filename, filepath, uploaded_at) VALUES (%s, %s, %s)",
         (filename, filepath, datetime.now())
     )
-    conn.commit()
-    cursor.close()
-    conn.close()
+    db.commit()
 
     return jsonify({"message": "File uploaded successfully", "filename": filename})
 
-
 @app.route("/documents", methods=["GET"])
+# @jwt_required()
 def list_documents():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT id, filename, uploaded_at FROM documents ORDER BY uploaded_at DESC LIMIT 10")
     docs = cursor.fetchall()
-    cursor.close()
-    conn.close()
     return jsonify(docs)
 
-
-@app.route("/download/<int:doc_id>", methods=["GET"])
-def download_file(doc_id):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM documents WHERE id = %s", (doc_id,))
-    doc = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not doc:
-        return jsonify({"error": "File not found"}), 404
-
-    return send_from_directory(app.config["UPLOAD_FOLDER"], doc["filename"], as_attachment=True)
-
-
-@app.route('/documents/<string:doc_name>', methods=['GET'])
-def get_document_by_name(doc_name):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM documents WHERE filename LIKE %s", (f"%{doc_name}%",))
-    result = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    if not result:
-        return jsonify({"message": "No documents found"}), 404
-
-    return jsonify(result)
-
-
-# ---------- Preview ----------
 @app.route("/preview/<filename>", methods=["GET"])
 def preview_file(filename):
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -114,14 +130,11 @@ def preview_file(filename):
 
     else:
         return jsonify({"type": "download", "url": f"http://localhost:5000/files/{filename}"})
-
-
-@app.route('/files/<filename>', methods=["GET"])
+    
+@app.route("/files/<filename>", methods=["GET"])
 def get_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
-
-# ---------- AI + OCR Extraction ----------
 @app.route("/extract/<filename>", methods=["GET"])
 def extract_text_route(filename):
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -129,9 +142,8 @@ def extract_text_route(filename):
     if not os.path.exists(file_path):
         return jsonify({"error": "File not found"}), 404
 
-    result = extract_text(file_path)   # ✅ directly returns dict {source, text}
+    result = extract_text(file_path)   
     return jsonify({"filename": filename, **result})
-
 
 
 if __name__ == "__main__":
