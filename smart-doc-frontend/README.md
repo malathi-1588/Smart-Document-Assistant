@@ -20,7 +20,7 @@ The project is built with **React + Vite** and styled using **Tailwind CSS**.
 ---
 
 ## Folder Structure
-
+```bash
 smart-doc-frontend/
 ├── public/                # Static assets
 ├── src/
@@ -42,7 +42,7 @@ smart-doc-frontend/
 ├── postcss.config.js      # PostCSS configuration
 ├── vite.config.js         # Vite configuration
 └── README.md              # Project documentation
-
+```
 ---
 
 ## 🚀 Tech Stack
